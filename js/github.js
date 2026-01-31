@@ -99,7 +99,7 @@ class GitHubAPI {
                 size: repo.size
             };
         } catch (error) {
-            if (error.message.includes('404')) {
+            if (error.message.includes('404') || error.message.includes('Not Found')) {
                 return { exists: false };
             }
             throw error;
@@ -122,7 +122,8 @@ class GitHubAPI {
                 size: data.size
             };
         } catch (error) {
-            if (error.message.includes('404')) {
+            // Handle both 404 and empty repo messages
+            if (error.message.includes('404') || error.message.includes('Not Found') || error.message.includes('empty')) {
                 return null;
             }
             throw error;
@@ -141,7 +142,7 @@ class GitHubAPI {
                 size: data.size
             };
         } catch (error) {
-            if (error.message.includes('404')) {
+            if (error.message.includes('404') || error.message.includes('Not Found') || error.message.includes('empty')) {
                 return null;
             }
             throw error;
@@ -251,7 +252,7 @@ class GitHubAPI {
                 sha: item.sha
             }));
         } catch (error) {
-            if (error.message.includes('404')) {
+            if (error.message.includes('404') || error.message.includes('Not Found') || error.message.includes('empty')) {
                 return [];
             }
             throw error;
