@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#6366f1">
+    <meta name="description" content="Your encrypted personal cloud vault">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Archie Vault">
+    
+    <title>Archie Vault</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icons/icon-192.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        vault: {
+                            bg: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                            primary: '#6366f1',
+                            secondary: '#818cf8',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#ef4444',
+                            text: '#f1f5f9',
+                            muted: '#94a3b8'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="bg-vault-bg text-vault-text font-sans min-h-screen">
+    
+    <!-- ==================== LOGIN SCREEN ==================== -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <!-- Logo -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-vault-primary/20 mb-4">
+                    <i data-lucide="shield-check" class="w-10 h-10 text-vault-primary"></i>
+                </div>
+                <h1 class="text-3xl font-bold">Archie Vault</h1>
+                <p class="text-vault-muted mt-2">Your encrypted personal cloud</p>
+            </div>
+            
+            <!-- Login Form -->
+            <div class="bg-vault-card rounded-2xl p-6 border border-vault-border">
+                <form id="login-form" class="space-y-4">
+                    <!-- Step indicator -->
+                    <div class="flex items-center justify-center gap-2 mb-6">
+                        <div id="step1-indicator" class="w-3 h-3 rounded-full bg-vault-primary"></div>
+                        <div class="w-8 h-0.5 bg-vault-border"></div>
+                        <div id="step2-indicator" class="w-3 h-3 rounded-full bg-vault-border"></div>
+                    </div>
+                    
+                    <!-- Step 1: GitHub Token -->
+                    <div id="step1" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">
+                                <i data-lucide="key" class="w-4 h-4 inline mr-1"></i>
+                                GitHub Personal Access Token
+                            </label>
+                            <input 
+                                type="password" 
+                                id="github-token" 
+                                class="w-full px-4 py-3 bg-vault-bg border border-vault-border rounded-xl focus:outline-none focus:border-vault-primary transition-colors"
+                                placeholder="ghp_xxxxxxxxxxxx"
+                                autocomplete="off"
+                            >
+                            <p class="text-xs text-vault-muted mt-2">
+                                Your token is stored locally and never sent to any server except GitHub.
+                            </p>
+                        </div>
+                        
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" id="remember-token" checked class="w-4 h-4 rounded border-vault-border bg-vault-bg text-vault-primary focus:ring-vault-primary">
+                            <span class="text-sm text-vault-muted">Remember token on this device</span>
+                        </label>
+                        
+                        <button 
+                            type="button" 
+                            id="verify-token-btn"
+                            class="w-full py-3 bg-vault-primary hover:bg-vault-secondary text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                        >
+                            <span>Verify Token</span>
+                            <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Step 2: Vault Password -->
+                    <div id="step2" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">
+                                <i data-lucide="lock" class="w-4 h-4 inline mr-1"></i>
+                                Vault Password
+                            </label>
+                            <input 
+                                type="password" 
+                                id="vault-password" 
+                                class="w-full px-4 py-3 bg-vault-bg border border-vault-border rounded-xl focus:outline-none focus:border-vault-primary transition-colors"
+                                placeholder="Enter your vault password"
+                                autocomplete="off"
+                            >
+                            <p class="text-xs text-vault-muted mt-2">
+                                This password encrypts all your data. <strong>Never forget it!</strong>
+                            </p>
+                        </div>
+                        
+                        <button 
+                            type="submit" 
+                            id="unlock-btn"
+                            class="w-full py-3 bg-vault-primary hover:bg-vault-secondary text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+                        >
+                            <i data-lucide="unlock" class="w-4 h-4"></i>
+                            <span>Unlock Vault</span>
+                        </button>
+                        
+                        <button 
+                            type="button" 
+                            id="back-btn"
+                            class="w-full py-2 text-vault-muted hover:text-white transition-colors text-sm"
+                        >
+                            ← Back to token
+                        </button>
+                    </div>
+                    
+                    <!-- First Time Setup -->
+                    <div id="setup-prompt" class="hidden text-center pt-4 border-t border-vault-border">
+                        <p class="text-sm text-vault-muted mb-3">First time? Create your vault:</p>
+                        <button 
+                            type="button" 
+                            id="create-vault-btn"
+                            class="px-6 py-2 bg-vault-success/20 text-vault-success hover:bg-vault-success/30 rounded-xl transition-colors text-sm font-medium"
+                        >
+                            <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                            Initialize New Vault
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Error Message -->
+            <div id="login-error" class="hidden mt-4 p-4 bg-vault-danger/20 border border-vault-danger/50 rounded-xl text-center text-sm">
+                <i data-lucide="alert-circle" class="w-4 h-4 inline mr-1"></i>
+                <span id="error-text">Error message here</span>
+            </div>
+            
+            <!-- Loading -->
+            <div id="login-loading" class="hidden mt-4 text-center">
+                <div class="inline-flex items-center gap-2 text-vault-muted">
+                    <div class="w-5 h-5 border-2 border-vault-primary border-t-transparent rounded-full animate-spin"></div>
+                    <span id="loading-text">Verifying...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== MAIN APP ==================== -->
+    <div id="main-app" class="hidden min-h-screen flex flex-col">
+        
+        <!-- Top Header -->
+        <header class="bg-vault-card border-b border-vault-border px-4 py-3 flex items-center justify-between sticky top-0 z-50">
+            <div class="flex items-center gap-3">
+                <button id="mobile-menu-btn" class="lg:hidden p-2 hover:bg-vault-bg rounded-lg transition-colors">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </button>
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-vault-primary/20 flex items-center justify-center">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-vault-primary"></i>
+                    </div>
+                    <span class="font-semibold hidden sm:inline">Archie Vault</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <!-- Sync Status -->
+                <div id="sync-status" class="flex items-center gap-2 px-3 py-1.5 bg-vault-bg rounded-lg text-sm">
+                    <div id="sync-icon" class="w-2 h-2 rounded-full bg-vault-success"></div>
+                    <span id="sync-text" class="hidden sm:inline text-vault-muted">Synced</span>
+                </div>
+                
+                <!-- Settings -->
+                <button id="settings-btn" class="p-2 hover:bg-vault-bg rounded-lg transition-colors">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                </button>
+                
+                <!-- Logout -->
+                <button id="logout-btn" class="p-2 hover:bg-vault-danger/20 text-vault-danger rounded-lg transition-colors">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </header>
+        
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="w-64 bg-vault-card border-r border-vault-border flex-shrink-0 flex flex-col hidden lg:flex">
+                <nav class="flex-1 p-4 space-y-1">
+                    <button class="nav-item active w-full" data-section="files">
+                        <i data-lucide="folder" class="w-5 h-5"></i>
+                        <span>File Vault</span>
+                    </button>
+                    <button class="nav-item w-full" data-section="passwords">
+                        <i data-lucide="key-round" class="w-5 h-5"></i>
+                        <span>Passwords</span>
+                    </button>
+                    <button class="nav-item w-full" data-section="tokens">
+                        <i data-lucide="ticket" class="w-5 h-5"></i>
+                        <span>Tokens</span>
+                    </button>
+                    <button class="nav-item w-full" data-section="ideas">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                        <span>Ideas Lab</span>
+                    </button>
+                    <button class="nav-item w-full" data-section="media">
+                        <i data-lucide="film" class="w-5 h-5"></i>
+                        <span>Media Vault</span>
+                    </button>
+                    <button class="nav-item w-full" data-section="clipboard">
+                        <i data-lucide="clipboard" class="w-5 h-5"></i>
+                        <span>Clipboard</span>
+                    </button>
+                </nav>
+                
+                <!-- Storage Info -->
+                <div class="p-4 border-t border-vault-border">
+                    <div class="text-xs text-vault-muted mb-2">Storage Used</div>
+                    <div class="h-2 bg-vault-bg rounded-full overflow-hidden mb-2">
+                        <div id="storage-bar" class="h-full bg-vault-primary rounded-full" style="width: 0%"></div>
+                    </div>
+                    <div class="text-xs text-vault-muted">
+                        <span id="storage-used">0 MB</span> / 100 GB
+                    </div>
+                    <div class="text-xs text-vault-muted mt-2">
+                        API: <span id="api-remaining">5000</span> calls left
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Mobile Sidebar Overlay -->
+            <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden"></div>
+            
+            <!-- Mobile Sidebar -->
+            <aside id="mobile-sidebar" class="fixed left-0 top-0 bottom-0 w-64 bg-vault-card border-r border-vault-border z-50 transform -translate-x-full transition-transform lg:hidden">
+                <div class="p-4 border-b border-vault-border flex items-center justify-between">
+                    <span class="font-semibold">Menu</span>
+                    <button id="close-sidebar-btn" class="p-2 hover:bg-vault-bg rounded-lg">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <nav class="p-4 space-y-1">
+                    <button class="nav-item-mobile active w-full" data-section="files">
+                        <i data-lucide="folder" class="w-5 h-5"></i>
+                        <span>File Vault</span>
+                    </button>
+                    <button class="nav-item-mobile w-full" data-section="passwords">
+                        <i data-lucide="key-round" class="w-5 h-5"></i>
+                        <span>Passwords</span>
+                    </button>
+                    <button class="nav-item-mobile w-full" data-section="tokens">
+                        <i data-lucide="ticket" class="w-5 h-5"></i>
+                        <span>Tokens</span>
+                    </button>
+                    <button class="nav-item-mobile w-full" data-section="ideas">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                        <span>Ideas Lab</span>
+                    </button>
+                    <button class="nav-item-mobile w-full" data-section="media">
+                        <i data-lucide="film" class="w-5 h-5"></i>
+                        <span>Media Vault</span>
+                    </button>
+                    <button class="nav-item-mobile w-full" data-section="clipboard">
+                        <i data-lucide="clipboard" class="w-5 h-5"></i>
+                        <span>Clipboard</span>
+                    </button>
+                </nav>
+            </aside>
+            
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-auto">
+                <!-- File Vault Section -->
+                <section id="section-files" class="vault-section p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold flex items-center gap-2">
+                                <i data-lucide="folder" class="w-5 h-5 text-vault-primary"></i>
+                                File Vault
+                            </h2>
+                            <p class="text-sm text-vault-muted mt-1">Store and encrypt any files securely</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="new-folder-btn" class="px-4 py-2 bg-vault-card border border-vault-border hover:border-vault-primary rounded-lg transition-colors text-sm flex items-center gap-2">
+                                <i data-lucide="folder-plus" class="w-4 h-4"></i>
+                                <span class="hidden sm:inline">New Folder</span>
+                            </button>
+                            <button id="upload-file-btn" class="px-4 py-2 bg-vault-primary hover:bg-vault-secondary rounded-lg transition-colors text-sm flex items-center gap-2">
+                                <i data-lucide="upload" class="w-4 h-4"></i>
+                                <span>Upload</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Breadcrumb -->
+                    <div id="file-breadcrumb" class="flex items-center gap-2 mb-4 text-sm">
+                        <button class="breadcrumb-item text-vault-primary hover:underline" data-path="/">
+                            <i data-lucide="home" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Drop Zone -->
+                    <div id="drop-zone" class="border-2 border-dashed border-vault-border rounded-xl p-8 text-center mb-6 transition-colors hover:border-vault-primary/50">
+                        <i data-lucide="upload-cloud" class="w-12 h-12 mx-auto text-vault-muted mb-3"></i>
+                        <p class="text-vault-muted">Drag and drop files here, or click Upload</p>
+                        <p class="text-xs text-vault-muted mt-2">Files are encrypted before upload</p>
+                        <input type="file" id="file-input" multiple class="hidden">
+                    </div>
+                    
+                    <!-- File List -->
+                    <div id="file-list" class="grid gap-2">
+                        <!-- Files will be rendered here -->
+                        <div class="text-center text-vault-muted py-8">
+                            <i data-lucide="folder-open" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p>No files yet. Upload something to get started!</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Passwords Section -->
+                <section id="section-passwords" class="vault-section hidden p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold flex items-center gap-2">
+                                <i data-lucide="key-round" class="w-5 h-5 text-vault-primary"></i>
+                                Password Manager
+                            </h2>
+                            <p class="text-sm text-vault-muted mt-1">Securely store your credentials</p>
+                        </div>
+                        <button id="add-password-btn" class="px-4 py-2 bg-vault-primary hover:bg-vault-secondary rounded-lg transition-colors text-sm flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Add Password</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Search -->
+                    <div class="relative mb-4">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-vault-muted"></i>
+                        <input type="text" id="password-search" placeholder="Search passwords..." class="w-full pl-10 pr-4 py-2 bg-vault-card border border-vault-border rounded-lg focus:outline-none focus:border-vault-primary">
+                    </div>
+                    
+                    <!-- Password List -->
+                    <div id="password-list" class="space-y-2">
+                        <div class="text-center text-vault-muted py-8">
+                            <i data-lucide="key-round" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p>No passwords saved yet</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Tokens Section -->
+                <section id="section-tokens" class="vault-section hidden p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold flex items-center gap-2">
+                                <i data-lucide="ticket" class="w-5 h-5 text-vault-primary"></i>
+                                Token Vault
+                            </h2>
+                            <p class="text-sm text-vault-muted mt-1">API keys, secrets, and tokens</p>
+                        </div>
+                        <button id="add-token-btn" class="px-4 py-2 bg-vault-primary hover:bg-vault-secondary rounded-lg transition-colors text-sm flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>Add Token</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Token List -->
+                    <div id="token-list" class="space-y-2">
+                        <div class="text-center text-vault-muted py-8">
+                            <i data-lucide="ticket" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p>No tokens saved yet</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Ideas Section -->
+                <section id="section-ideas" class="vault-section hidden p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold flex items-center gap-2">
+                                <i data-lucide="lightbulb" class="w-5 h-5 text-vault-primary"></i>
+                                Ideas Lab
+                            </h2>
+                            <p class="text-sm text-vault-muted mt-1">Project ideas and notes</p>
+                        </div>
+                        <button id="add-idea-btn" class="px-4 py-2 bg-vault-primary hover:bg-vault-secondary rounded-lg transition-colors text-sm flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>New Idea</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Ideas Filter -->
+                    <div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+                        <button class="idea-filter active px-3 py-1 rounded-full text-sm whitespace-nowrap" data-filter="all">All</button>
+                        <button class="idea-filter px-3 py-1 rounded-full text-sm whitespace-nowrap" data-filter="hot">🔥 Hot</button>
+                        <button class="idea-filter px-3 py-1 rounded-full text-sm whitespace-nowrap" data-filter="progress">🚧 In Progress</button>
+                        <button class="idea-filter px-3 py-1 rounded-full text-sm whitespace-nowrap" data-filter="done">✅ Done</button>
+                        <button class="idea-filter px-3 py-1 rounded-full text-sm whitespace-nowrap" data-filter="backlog">📋 Backlog</button>
+                    </div>
+                    
+                    <!-- Ideas List -->
+                    <div id="idea-list" class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <div class="col-span-full text-center text-vault-muted py-8">
+                            <i data-lucide="lightbulb" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p>No ideas yet. Start brainstorming!</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Media Section -->
+                <section id="section-media" class="vault-section hidden p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold flex items-center gap-2">
+                                <i data-lucide="film" class="w-5 h-5 text-vault-primary"></i>
+                                Media Vault
+                            </h2>
+                            <p class="text-sm text-vault-muted mt-1">Videos, images, and audio files</p>
+                        </div>
+                        <button id="upload-media-btn" class="px-4 py-2 bg-vault-primary hover:bg-vault-secondary rounded-lg transition-colors text-sm flex items-center gap-2">
+                            <i data-lucide="upload" class="w-4 h-4"></i>
+                            <span>Upload Media</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Media Grid -->
+                    <div id="media-list" class="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                        <div class="col-span-full text-center text-vault-muted py-8">
+                            <i data-lucide="film" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p>No media files yet</p>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Clipboard Section -->
+                <section id="section-clipboard" class="vault-section hidden p-4 lg:p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <div>
+                            <h2 class="text-xl font-semibold flex items-center gap-2">
+                                <i data-lucide="clipboard" class="w-5 h-5 text-vault-primary"></i>
+                                Quick Clipboard
+                            </h2>
+                            <p class="text-sm text-vault-muted mt-1">Save snippets and quick notes</p>
+                        </div>
+                        <button id="add-snippet-btn" class="px-4 py-2 bg-vault-primary hover:bg-vault-secondary rounded-lg transition-colors text-sm flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>New Snippet</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Snippet List -->
+                    <div id="snippet-list" class="space-y-3">
+                        <div class="text-center text-vault-muted py-8">
+                            <i data-lucide="clipboard" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                            <p>No snippets saved yet</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    
+    <!-- ==================== MODALS ==================== -->
+    
+    <!-- Generic Modal Container -->
+    <div id="modal-overlay" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div id="modal-content" class="bg-vault-card rounded-2xl w-full max-w-md max-h-[90vh] overflow-auto">
+            <!-- Modal content will be injected here -->
+        </div>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-vault-card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
+            <div class="p-6 border-b border-vault-border flex items-center justify-between">
+                <h3 class="text-lg font-semibold">Settings</h3>
+                <button id="close-settings" class="p-2 hover:bg-vault-bg rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Vault Info -->
+                <div>
+                    <h4 class="font-medium mb-3">Vault Information</h4>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-vault-muted">Data Repository</span>
+                            <span>VAULT-ARCHIETECH</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-vault-muted">Total Files</span>
+                            <span id="total-files">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-vault-muted">Storage Used</span>
+                            <span id="settings-storage">0 MB</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security -->
+                <div>
+                    <h4 class="font-medium mb-3">Security</h4>
+                    <button id="change-password-btn" class="w-full p-3 bg-vault-bg border border-vault-border rounded-lg text-left hover:border-vault-primary transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="key" class="w-5 h-5 text-vault-muted"></i>
+                            <div>
+                                <div class="font-medium">Change Vault Password</div>
+                                <div class="text-xs text-vault-muted">Re-encrypt all data with a new password</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- Export -->
+                <div>
+                    <h4 class="font-medium mb-3">Backup</h4>
+                    <button id="export-vault-btn" class="w-full p-3 bg-vault-bg border border-vault-border rounded-lg text-left hover:border-vault-primary transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="download" class="w-5 h-5 text-vault-muted"></i>
+                            <div>
+                                <div class="font-medium">Export All Data</div>
+                                <div class="text-xs text-vault-muted">Download decrypted backup (handle with care!)</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+                
+                <!-- Danger Zone -->
+                <div>
+                    <h4 class="font-medium mb-3 text-vault-danger">Danger Zone</h4>
+                    <button id="clear-token-btn" class="w-full p-3 bg-vault-danger/10 border border-vault-danger/30 rounded-lg text-left hover:bg-vault-danger/20 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="trash-2" class="w-5 h-5 text-vault-danger"></i>
+                            <div>
+                                <div class="font-medium text-vault-danger">Clear Saved Token</div>
+                                <div class="text-xs text-vault-muted">Remove token from this device</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/crypto.js"></script>
+    <script src="js/github.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui/components.js"></script>
+    <script src="js/ui/file-manager.js"></script>
+    <script src="js/ui/password-manager.js"></script>
+    <script src="js/ui/token-vault.js"></script>
+    <script src="js/ui/ideas-lab.js"></script>
+    <script src="js/ui/media-vault.js"></script>
+    <script src="js/ui/clipboard.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- Initialize Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
